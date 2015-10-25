@@ -1,4 +1,14 @@
 apply plugin: 'com.android.library'
+apply plugin: 'bintray-release'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.3.4'
+    }
+}
 
 android {
     compileSdkVersion 23
@@ -25,4 +35,15 @@ dependencies {
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.squareup.okhttp:okhttp:2.5.0'
     compile 'com.squareup.okhttp:okhttp-urlconnection:2.5.0'
+}
+
+publish {
+    userOrg = 'alorma'
+    groupId = 'com.github.alorma'
+    artifactId = 'gitskarios-core'
+    version = '1.0.0'
+    description = 'A Gitskarios base SDK'
+    website = 'https://github.com/gitskarios/Gitskarios-core'
+    issueTracker = "${website}/issues"
+    repository = "${website}.git"
 }
