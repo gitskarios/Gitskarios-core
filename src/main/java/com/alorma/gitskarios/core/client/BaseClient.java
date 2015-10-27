@@ -15,6 +15,10 @@ import retrofit.RetrofitError;
 import retrofit.client.Client;
 import retrofit.client.Response;
 import retrofit.converter.Converter;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, RestAdapter.Log {
 
@@ -39,11 +43,10 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
     }
 
     private RestAdapter getRestAdapter() {
-        RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder()
-                .setEndpoint(client.getApiEndpoint())
-                .setRequestInterceptor(this)
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setLog(this);
+        RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder().setEndpoint(client.getApiEndpoint())
+            .setRequestInterceptor(this)
+            .setLogLevel(RestAdapter.LogLevel.FULL)
+            .setLog(this);
 
         if (customConverter() != null) {
             restAdapterBuilder.setConverter(customConverter());
@@ -77,6 +80,28 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
             return executeServiceSync(getRestAdapter());
         }
         return null;
+    }
+
+    public Observable<K> observable(final Subscriber<Response> responseObservable) {
+        return Observable.create(new Observable.OnSubscribe<K>() {
+            @Override
+            public void call(final Subscriber<? super K> subscriber) {
+                setOnResultCallback(new OnResultCallback<K>() {
+                    @Override
+                    public void onResponseOk(K k, Response r) {
+                        Observable.just(r).subscribe(responseObservable);
+                        subscriber.onNext(k);
+                        subscriber.onCompleted();
+                    }
+
+                    @Override
+                    public void onFail(RetrofitError error) {
+                        subscriber.onError(error);
+                    }
+                });
+                execute();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
     protected Converter customConverter() {
@@ -141,7 +166,6 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
     public void setOnResultCallback(OnResultCallback<K> onResultCallback) {
         this.onResultCallback = onResultCallback;
     }
-
 
     protected String getToken() {
         return storeCredentials.token();
