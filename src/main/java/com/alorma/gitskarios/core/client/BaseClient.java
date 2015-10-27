@@ -87,22 +87,31 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
         return Observable.create(new Observable.OnSubscribe<Pair<K, Response>>() {
 
             @Override
-            public void call(final Subscriber<? super Pair<K, Response>> subscriber) {
-                setOnResultCallback(new OnResultCallback<K>() {
-                    @Override
-                    public void onResponseOk(K k, Response r) {
-                        subscriber.onNext(new Pair<>(k, r));
-                        subscriber.onCompleted();
-                    }
-
-                    @Override
-                    public void onFail(RetrofitError error) {
-                        subscriber.onError(error);
-                    }
-                });
+            public void call(Subscriber<? super Pair<K, Response>> subscriber) {
+                setOnResultCallback(new Sbbscrib(subscriber));
                 execute();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public class Sbbscrib implements OnResultCallback<K> {
+
+        Subscriber<? super Pair<K, Response>> subscriber;
+
+        public Sbbscrib(Subscriber<? super Pair<K, Response>> subscriber) {
+            this.subscriber = subscriber;
+        }
+
+        @Override
+        public void onResponseOk(K k, Response r) {
+            subscriber.onNext(new Pair<>(k, r));
+            subscriber.onCompleted();
+        }
+
+        @Override
+        public void onFail(RetrofitError error) {
+            subscriber.onError(error);
+        }
     }
 
     protected Converter customConverter() {
