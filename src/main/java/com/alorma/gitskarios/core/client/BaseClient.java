@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
+import android.util.Pair;
 import com.alorma.gitskarios.core.ApiClient;
 
 import retrofit.Callback;
@@ -82,15 +83,15 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
         return null;
     }
 
-    public Observable<K> observable(final Subscriber<Response> responseObservable) {
-        return Observable.create(new Observable.OnSubscribe<K>() {
+    public Observable<Pair<K, Response>> observable() {
+        return Observable.create(new Observable.OnSubscribe<Pair<K, Response>>() {
+
             @Override
-            public void call(final Subscriber<? super K> subscriber) {
+            public void call(final Subscriber<? super Pair<K, Response>> subscriber) {
                 setOnResultCallback(new OnResultCallback<K>() {
                     @Override
                     public void onResponseOk(K k, Response r) {
-                        Observable.just(r).subscribe(responseObservable);
-                        subscriber.onNext(k);
+                        subscriber.onNext(new Pair<>(k, r));
                         subscriber.onCompleted();
                     }
 
