@@ -43,7 +43,7 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
         storeCredentials = new StoreCredentials(context);
     }
 
-    private RestAdapter getRestAdapter() {
+    protected RestAdapter getRestAdapter() {
         RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder().setEndpoint(client.getApiEndpoint())
             .setRequestInterceptor(this)
             .setLogLevel(RestAdapter.LogLevel.FULL)
