@@ -18,7 +18,6 @@ import retrofit.client.Response;
 import retrofit.converter.Converter;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, RestAdapter.Log {
@@ -91,7 +90,7 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
                 setOnResultCallback(new Sbbscrib(subscriber));
                 execute();
             }
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        }).subscribeOn(Schedulers.io());
     }
 
     public class Sbbscrib implements OnResultCallback<K> {
