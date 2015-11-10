@@ -26,7 +26,6 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
 
     protected Context context;
     private OnResultCallback<K> onResultCallback;
-    protected Handler handler;
     private ApiClient client;
 
     public Uri last;
@@ -65,11 +64,6 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
     }
 
     public void execute() {
-        try {
-            handler = new Handler();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         if (getToken() != null) {
             executeService(getRestAdapter());
         }
@@ -123,16 +117,7 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
 
     @Override
     public void success(final K k, final Response response) {
-        if (handler != null) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    sendResponse(k, response);
-                }
-            });
-        } else {
-            sendResponse(k, response);
-        }
+        sendResponse(k, response);
     }
 
     private void sendResponse(K k, Response response) {
@@ -143,16 +128,7 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
 
     @Override
     public void failure(final RetrofitError error) {
-        if (handler != null) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    sendError(error);
-                }
-            });
-        } else {
-            sendError(error);
-        }
+        sendError(error);
     }
 
     private void sendError(RetrofitError error) {
