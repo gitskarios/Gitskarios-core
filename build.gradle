@@ -48,6 +48,10 @@ android {
     }
 
     publishNonDefault true
+    
+    lintOptions {
+        abortOnError false
+    }
 
     buildTypes {
         debug {
