@@ -38,14 +38,14 @@ for example you can use this lib by adding these two dependencies into your pom.
 <dependency>
     <groupId>com.github.alorma</groupId>
     <artifactId>gitskarios-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <type>apklib</type>
     <scope>compile</scope>
 </dependency>
 <dependency>
     <groupId>com.github.alorma</groupId>
     <artifactId>gitskarios-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <type>jar</type>
     <scope>provided</scope>
 </dependency>
