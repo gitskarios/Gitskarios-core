@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
+import android.util.Pair;
 import com.alorma.gitskarios.core.ApiClient;
 
 import retrofit.Callback;
@@ -15,6 +16,9 @@ import retrofit.RetrofitError;
 import retrofit.client.Client;
 import retrofit.client.Response;
 import retrofit.converter.Converter;
+import rx.Observable;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, RestAdapter.Log {
 
@@ -22,7 +26,6 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
 
     protected Context context;
     private OnResultCallback<K> onResultCallback;
-    protected Handler handler;
     private ApiClient client;
 
     public Uri last;
@@ -38,12 +41,11 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
         storeCredentials = new StoreCredentials(context);
     }
 
-    private RestAdapter getRestAdapter() {
-        RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder()
-                .setEndpoint(client.getApiEndpoint())
-                .setRequestInterceptor(this)
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setLog(this);
+    protected RestAdapter getRestAdapter() {
+        RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder().setEndpoint(client.getApiEndpoint())
+            .setRequestInterceptor(this)
+            .setLogLevel(RestAdapter.LogLevel.FULL)
+            .setLog(this);
 
         if (customConverter() != null) {
             restAdapterBuilder.setConverter(customConverter());
@@ -62,11 +64,6 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
     }
 
     public void execute() {
-        try {
-            handler = new Handler();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         if (getToken() != null) {
             executeService(getRestAdapter());
         }
@@ -79,6 +76,37 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
         return null;
     }
 
+    public Observable<Pair<K, Response>> observable() {
+        return Observable.create(new Observable.OnSubscribe<Pair<K, Response>>() {
+
+            @Override
+            public void call(Subscriber<? super Pair<K, Response>> subscriber) {
+                setOnResultCallback(new Sbbscrib(subscriber));
+                execute();
+            }
+        }).subscribeOn(Schedulers.io());
+    }
+
+    public class Sbbscrib implements OnResultCallback<K> {
+
+        Subscriber<? super Pair<K, Response>> subscriber;
+
+        public Sbbscrib(Subscriber<? super Pair<K, Response>> subscriber) {
+            this.subscriber = subscriber;
+        }
+
+        @Override
+        public void onResponseOk(K k, Response r) {
+            subscriber.onNext(new Pair<>(k, r));
+            subscriber.onCompleted();
+        }
+
+        @Override
+        public void onFail(RetrofitError error) {
+            subscriber.onError(error);
+        }
+    }
+
     protected Converter customConverter() {
         return null;
     }
@@ -89,16 +117,7 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
 
     @Override
     public void success(final K k, final Response response) {
-        if (handler != null) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    sendResponse(k, response);
-                }
-            });
-        } else {
-            sendResponse(k, response);
-        }
+        sendResponse(k, response);
     }
 
     private void sendResponse(K k, Response response) {
@@ -109,16 +128,7 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
 
     @Override
     public void failure(final RetrofitError error) {
-        if (handler != null) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    sendError(error);
-                }
-            });
-        } else {
-            sendError(error);
-        }
+        sendError(error);
     }
 
     private void sendError(RetrofitError error) {
@@ -141,7 +151,6 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
     public void setOnResultCallback(OnResultCallback<K> onResultCallback) {
         this.onResultCallback = onResultCallback;
     }
-
 
     protected String getToken() {
         return storeCredentials.token();

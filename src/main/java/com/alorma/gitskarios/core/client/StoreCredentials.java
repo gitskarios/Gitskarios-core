@@ -50,7 +50,10 @@ public class StoreCredentials {
 	}
 
 	public void clear() {
-		editor.clear();
+		editor.remove(USER_NAME);
+		editor.remove(USER_TOKEN);
+		editor.remove(USER_SCOPES);
+		editor.remove(USER_SCOPES_NO_ASK);
 		editor.commit();
 	}
 
