@@ -2,52 +2,53 @@ apply plugin: 'com.android.library'
 apply plugin: 'bintray-release'
 
 buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.novoda:bintray-release:0.3.4'
-    }
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.novoda:bintray-release:0.3.4'
+  }
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+  compileSdkVersion 23
+  buildToolsVersion "23.0.1"
 
-    defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
+  defaultConfig {
+    minSdkVersion 15
+    targetSdkVersion 23
+    versionCode 1
+    versionName "1.0"
+  }
+
+  publishNonDefault true
+
+  buildTypes {
+    debug {}
+    release {}
+  }
 }
 
 dependencies {
-    compile 'com.android.support:support-annotations:23.1.0'
-    compile 'com.android.support:support-v4:23.1.0'
-    compile 'net.danlew:android.joda:2.8.2'
-    compile 'com.squareup.retrofit:retrofit:1.9.0'
-    compile 'com.squareup.okhttp:okhttp:2.5.0'
-    compile 'com.squareup.okhttp:okhttp-urlconnection:2.5.0'
+  compile 'com.android.support:support-annotations:23.1.0'
+  compile 'com.android.support:support-v4:23.1.0'
+  compile 'net.danlew:android.joda:2.8.2'
+  compile 'com.squareup.retrofit:retrofit:1.9.0'
+  compile 'com.squareup.okhttp:okhttp:2.5.0'
+  compile 'com.squareup.okhttp:okhttp-urlconnection:2.5.0'
 
-    // Because RxAndroid releases are few and far between, it is recommended you also
-    // explicitly depend on RxJava's latest version for bug fixes and new features.
-    compile 'io.reactivex:rxjava:1.0.14'
+  // Because RxAndroid releases are few and far between, it is recommended you also
+  // explicitly depend on RxJava's latest version for bug fixes and new features.
+  compile 'io.reactivex:rxjava:1.0.14'
 }
 
 publish {
-    userOrg = 'alorma'
-    groupId = 'com.github.alorma'
-    artifactId = 'gitskarios-core'
-    version = '1.0.2'
-    description = 'A Gitskarios base SDK'
-    website = 'https://github.com/gitskarios/Gitskarios-core'
-    issueTracker = "${website}/issues"
-    repository = "${website}.git"
+  userOrg = 'alorma'
+  groupId = 'com.github.alorma'
+  artifactId = 'gitskarios-core'
+  version = '1.0.2'
+  description = 'A Gitskarios base SDK'
+  website = 'https://github.com/gitskarios/Gitskarios-core'
+  issueTracker = "${website}/issues"
+  repository = "${website}.git"
 }
