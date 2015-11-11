@@ -45,7 +45,7 @@ publish {
     userOrg = 'alorma'
     groupId = 'com.github.alorma'
     artifactId = 'gitskarios-core'
-    version = '1.0.0'
+    version = '1.0.2'
     description = 'A Gitskarios base SDK'
     website = 'https://github.com/gitskarios/Gitskarios-core'
     issueTracker = "${website}/issues"

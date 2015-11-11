@@ -38,6 +38,6 @@ then you can use this lib with maven
 <dependency>
     <groupId>com.github.alorma</groupId>
     <artifactId>gitskarios-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
 </dependency>
 ```
