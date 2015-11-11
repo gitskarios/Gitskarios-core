@@ -46,10 +46,16 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    publishNonDefault true
+
     buildTypes {
+        debug {
+
+        }
+        
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        
         }
     }
 }
@@ -67,7 +73,7 @@ publish {
     userOrg = 'alorma'
     groupId = 'com.github.alorma'
     artifactId = 'gitskarios-core'
-    version = '1.0.0'
+    version = '1.1.0'
     description = 'A Gitskarios base SDK'
     website = 'https://github.com/gitskarios/Gitskarios-core'
     issueTracker = "${website}/issues"
