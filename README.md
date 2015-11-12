@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/gitskarios/Gitskarios-core.svg)](https://travis-ci.org/gitskarios/Gitskarios-core)
 
-[ ![Download](https://api.bintray.com/packages/alorma/maven/gitsksarios-core/images/download.svg) ](https://bintray.com/alorma/maven/gitsksarios-core/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/alorma/maven/gitskarios-core/images/download.svg) ](https://bintray.com/alorma/maven/gitskarios-core/_latestVersion)
 
 
 # How to Use
