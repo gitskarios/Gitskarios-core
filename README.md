@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.org/gitskarios/Gitskarios-core.svg)](https://travis-ci.org/gitskarios/Gitskarios-core)
 
+[ ![Download](https://api.bintray.com/packages/alorma/maven/gitsksarios-core/images/download.svg) ](https://bintray.com/alorma/maven/gitsksarios-core/_latestVersion)
+
+
 # How to Use
 
 ### add the android-sdk into you own maven repository
