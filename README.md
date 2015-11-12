@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/gitskarios/Gitskarios-core.svg)](https://travis-ci.org/gitskarios/Gitskarios-core)
+
 # How to Use
 
 ### add the android-sdk into you own maven repository
