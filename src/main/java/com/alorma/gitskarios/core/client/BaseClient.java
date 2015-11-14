@@ -18,20 +18,20 @@ import retrofit.client.Response;
 import retrofit.converter.Converter;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, RestAdapter.Log {
+public abstract class BaseClient<K> implements RequestInterceptor, RestAdapter.Log {
 
     protected StoreCredentials storeCredentials;
 
     protected Context context;
-    private OnResultCallback<K> onResultCallback;
     private ApiClient client;
 
-    public Uri last;
-    public Uri next;
-    public int lastPage;
-    public int nextPage;
+    private Observable<K> cacheObservable;
+    private Observable<K> apiObservable;
+    private Action1<? super K> saveCache;
 
     public BaseClient(Context context, ApiClient client) {
         this.client = client;
@@ -42,10 +42,11 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
     }
 
     protected RestAdapter getRestAdapter() {
-        RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder().setEndpoint(client.getApiEndpoint())
-            .setRequestInterceptor(this)
-            .setLogLevel(RestAdapter.LogLevel.FULL)
-            .setLog(this);
+        RestAdapter.Builder restAdapterBuilder =
+            new RestAdapter.Builder().setEndpoint(client.getApiEndpoint())
+                .setRequestInterceptor(this)
+                .setLogLevel(RestAdapter.LogLevel.FULL)
+                .setLog(this);
 
         if (customConverter() != null) {
             restAdapterBuilder.setConverter(customConverter());
@@ -63,93 +64,61 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
         return null;
     }
 
-    public void execute() {
-        if (getToken() != null) {
-            executeService(getRestAdapter());
-        }
+    public Observable<K> observable() {
+        return cacheObservable().switchIfEmpty(getApi());
     }
 
-    public K executeSync() {
-        if (getToken() != null) {
-            return executeServiceSync(getRestAdapter());
-        }
-        return null;
+    public Observable<K> cacheObservable() {
+        return cacheObservable != null ? cacheObservable : Observable.<K>empty();
     }
 
-    public Observable<Pair<K, Response>> observable() {
-        return Observable.create(new Observable.OnSubscribe<Pair<K, Response>>() {
+    public void setCacheObservable(Observable<K> observable) {
+        this.cacheObservable = observable;
+    }
 
-            @Override
-            public void call(Subscriber<? super Pair<K, Response>> subscriber) {
-                setOnResultCallback(new Sbbscrib(subscriber));
-                execute();
+    private Observable<? extends K> getApi() {
+        if (getApiObservable(getRestAdapter()) != null) {
+
+            if (saveCache != null) {
+                apiObservable.doOnNext(saveCache);
+                apiObservable.doOnError(new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        sendError(throwable);
+                    }
+                });
             }
-        }).subscribeOn(Schedulers.io());
+
+            return apiObservable;
+        }
+
+        return Observable.empty();
     }
 
-    public class Sbbscrib implements OnResultCallback<K> {
+    protected abstract Observable<K> getApiObservable(RestAdapter restAdapter);
 
-        Subscriber<? super Pair<K, Response>> subscriber;
+    public void setSaveCache(Action1<? super K> saveCache) {
+        this.saveCache = saveCache;
+    }
 
-        public Sbbscrib(Subscriber<? super Pair<K, Response>> subscriber) {
-            this.subscriber = subscriber;
-        }
-
-        @Override
-        public void onResponseOk(K k, Response r) {
-            subscriber.onNext(new Pair<>(k, r));
-            subscriber.onCompleted();
-        }
-
-        @Override
-        public void onFail(RetrofitError error) {
-            subscriber.onError(error);
-        }
+    public void setApiObservable(Observable<K> apiObservable) {
+        this.apiObservable = apiObservable;
     }
 
     protected Converter customConverter() {
         return null;
     }
 
-    protected abstract void executeService(RestAdapter restAdapter);
-
-    protected abstract K executeServiceSync(RestAdapter restAdapter);
-
-    @Override
-    public void success(final K k, final Response response) {
-        sendResponse(k, response);
-    }
-
-    private void sendResponse(K k, Response response) {
-        if (onResultCallback != null) {
-            onResultCallback.onResponseOk(k, response);
-        }
-    }
-
-    @Override
-    public void failure(final RetrofitError error) {
-        sendError(error);
-    }
-
-    private void sendError(RetrofitError error) {
-        if (error.getResponse() != null && error.getResponse().getStatus() == 401) {
+    private void sendError(Throwable error) {
+        if (error != null
+            && error instanceof RetrofitError
+            && ((RetrofitError) error).getResponse() != null
+            && ((RetrofitError) error).getResponse().getStatus() == 401) {
             if (context != null) {
                 LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
                 manager.sendBroadcast(new UnAuthIntent(storeCredentials.token()));
             }
-        } else {
-            if (onResultCallback != null) {
-                onResultCallback.onFail(error);
-            }
         }
-    }
-
-    public OnResultCallback<K> getOnResultCallback() {
-        return onResultCallback;
-    }
-
-    public void setOnResultCallback(OnResultCallback<K> onResultCallback) {
-        this.onResultCallback = onResultCallback;
     }
 
     protected String getToken() {
@@ -158,12 +127,6 @@ public abstract class BaseClient<K> implements Callback<K>, RequestInterceptor, 
 
     public Context getContext() {
         return context;
-    }
-
-    public interface OnResultCallback<K> {
-        void onResponseOk(K k, Response r);
-
-        void onFail(RetrofitError error);
     }
 
     public ApiClient getClient() {
