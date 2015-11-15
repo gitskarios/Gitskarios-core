@@ -43,8 +43,6 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
     }
 
     publishNonDefault true
@@ -81,7 +79,7 @@ publish {
   userOrg = 'alorma'
   groupId = 'com.github.alorma'
   artifactId = 'gitskarios-core'
-  version = '1.2.0'
+  version = '2.0.1'
   description = 'A Gitskarios base SDK'
   website = 'https://github.com/gitskarios/Gitskarios-core'
   issueTracker = "${website}/issues"

@@ -37,20 +37,25 @@ https://github.com/wsdjeg/maven-android-sdk-deployer/blob/master/README.markdown
 
 by this command `mvn clean intall` you will package this project into ~/.m2/repository/com/github/alorma/gitskarios-core/ . also you can find there are two package in this dir,apklib and jar,apklib contains all the necessary src res and so on,jar contains all the classes,you  need to use different scope for these two package.
 
+
+``` groovy
+    compile 'com.github.alorma:gitskarios-core:2.0.1'
+```
+
 for example you can use this lib by adding these two dependencies into your pom.xml
 
 ```xml
 <dependency>
     <groupId>com.github.alorma</groupId>
     <artifactId>gitskarios-core</artifactId>
-    <version>1.2.0</version>
+    <version>2.0.1</version>
     <type>apklib</type>
     <scope>compile</scope>
 </dependency>
 <dependency>
     <groupId>com.github.alorma</groupId>
     <artifactId>gitskarios-core</artifactId>
-    <version>1.2.0</version>
+    <version>2.0.1</version>
     <type>jar</type>
     <scope>provided</scope>
 </dependency>
