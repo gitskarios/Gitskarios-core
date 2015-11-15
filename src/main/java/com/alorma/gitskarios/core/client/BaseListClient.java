@@ -19,24 +19,19 @@ import retrofit.client.Response;
 import retrofit.converter.Converter;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
-public abstract class BaseListClient<K> implements Callback<K>, RequestInterceptor, RestAdapter.Log {
+public abstract class BaseListClient<K> implements RequestInterceptor, RestAdapter.Log {
 
     protected StoreCredentials storeCredentials;
 
     protected Context context;
-    private OnResultCallback<K> onResultCallback;
     private ApiClient client;
 
     public Uri last;
     public Uri next;
     public int lastPage;
     public int nextPage;
-
-    private Observable<Pair<K, Integer>> apiObservable;
-    private Action1<? super K> saveCache;
 
     public BaseListClient(Context context, ApiClient client) {
         this.client = client;
@@ -69,54 +64,42 @@ public abstract class BaseListClient<K> implements Callback<K>, RequestIntercept
         return null;
     }
 
-    public void execute() {
-        if (getToken() != null) {
-            executeService(getRestAdapter());
-        }
-    }
-
-    public K executeSync() {
-        if (getToken() != null) {
-            return executeServiceSync(getRestAdapter());
-        }
-        return null;
-    }
-
     public Observable<? extends Pair<K, Integer>> observable() {
         return getApiObservable().subscribeOn(Schedulers.io());
     }
 
-    public Observable<? extends Pair<K, Integer>> getApiObservable() {
-        return Observable.create(new Observable.OnSubscribe<Pair<K, Integer>>() {
-
-            @Override
-            public void call(Subscriber<? super Pair<K, Integer>> subscriber) {
-                setOnResultCallback(new Sbbscrib(subscriber));
-                execute();
-            }
-        });
+    private Observable<? extends Pair<K, Integer>> getApiObservable() {
+        return Observable.create(getApiObservable(getRestAdapter()));
     }
 
-    public class Sbbscrib implements OnResultCallback<K> {
+    protected abstract ApiSubscriber getApiObservable(RestAdapter restAdapter);
+
+    public abstract class ApiSubscriber implements Observable.OnSubscribe<Pair<K, Integer>>, Callback<K>{
 
         Subscriber<? super Pair<K, Integer>> subscriber;
 
-        public Sbbscrib(Subscriber<? super Pair<K, Integer>> subscriber) {
-            this.subscriber = subscriber;
+        public ApiSubscriber() {
         }
 
         @Override
-        public void onResponseOk(K k, Response r) {
-            subscriber.onNext(new Pair<K, Integer>(k, getLinkData(r)));
+        public void success(K k, Response r) {
+            subscriber.onNext(new Pair<>(k, getLinkData(r)));
             subscriber.onCompleted();
         }
 
         @Override
-        public void onFail(RetrofitError error) {
-            subscriber.onError(error);
+        public void failure(RetrofitError error) {
+            if (error.getResponse() != null && error.getResponse().getStatus() == 401) {
+                if (context != null) {
+                    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+                    manager.sendBroadcast(new UnAuthIntent(storeCredentials.token()));
+                }
+            } else {
+                subscriber.onError(error);
+            }
         }
 
-        private int getLinkData(Response r) {
+        private Integer getLinkData(Response r) {
             if (r != null) {
                 List<Header> headers = r.getHeaders();
                 Map<String, String> headersMap = new HashMap<String, String>(headers.size());
@@ -135,53 +118,20 @@ public abstract class BaseListClient<K> implements Callback<K>, RequestIntercept
                     }
                 }
             }
-            return 0;
+            return null;
         }
+
+        @Override
+        public void call(Subscriber<? super Pair<K, Integer>> subscriber) {
+            this.subscriber = subscriber;
+            call(getRestAdapter());
+        }
+
+        protected abstract void call(RestAdapter restAdapter);
     }
 
     protected Converter customConverter() {
         return null;
-    }
-
-    protected abstract void executeService(RestAdapter restAdapter);
-
-    protected abstract K executeServiceSync(RestAdapter restAdapter);
-
-    @Override
-    public void success(final K k, final Response response) {
-        sendResponse(k, response);
-    }
-
-    private void sendResponse(K k, Response response) {
-        if (onResultCallback != null) {
-            onResultCallback.onResponseOk(k, response);
-        }
-    }
-
-    @Override
-    public void failure(final RetrofitError error) {
-        sendError(error);
-    }
-
-    private void sendError(RetrofitError error) {
-        if (error.getResponse() != null && error.getResponse().getStatus() == 401) {
-            if (context != null) {
-                LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-                manager.sendBroadcast(new UnAuthIntent(storeCredentials.token()));
-            }
-        } else {
-            if (onResultCallback != null) {
-                onResultCallback.onFail(error);
-            }
-        }
-    }
-
-    public OnResultCallback<K> getOnResultCallback() {
-        return onResultCallback;
-    }
-
-    public void setOnResultCallback(OnResultCallback<K> onResultCallback) {
-        this.onResultCallback = onResultCallback;
     }
 
     protected String getToken() {
@@ -190,12 +140,6 @@ public abstract class BaseListClient<K> implements Callback<K>, RequestIntercept
 
     public Context getContext() {
         return context;
-    }
-
-    public interface OnResultCallback<K> {
-        void onResponseOk(K k, Response r);
-
-        void onFail(RetrofitError error);
     }
 
     public ApiClient getClient() {
