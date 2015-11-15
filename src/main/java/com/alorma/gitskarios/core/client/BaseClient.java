@@ -70,18 +70,6 @@ public abstract class BaseClient<K> implements RequestInterceptor, RestAdapter.L
         return null;
     }
 
-    private void sendError(Throwable error) {
-        if (error != null
-            && error instanceof RetrofitError
-            && ((RetrofitError) error).getResponse() != null
-            && ((RetrofitError) error).getResponse().getStatus() == 401) {
-            if (context != null) {
-                LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-                manager.sendBroadcast(new UnAuthIntent(storeCredentials.token()));
-            }
-        }
-    }
-
     protected String getToken() {
         return storeCredentials.token();
     }
