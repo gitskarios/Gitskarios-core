@@ -29,10 +29,6 @@ public abstract class BaseClient<K> implements RequestInterceptor, RestAdapter.L
     protected Context context;
     private ApiClient client;
 
-    private Observable<K> cacheObservable;
-    private Observable<K> apiObservable;
-    private Action1<? super K> saveCache;
-
     public BaseClient(Context context, ApiClient client) {
         this.client = client;
         if (context != null) {
@@ -65,46 +61,10 @@ public abstract class BaseClient<K> implements RequestInterceptor, RestAdapter.L
     }
 
     public Observable<K> observable() {
-        return cacheObservable().switchIfEmpty(getApi());
-    }
-
-    public Observable<K> cacheObservable() {
-        return cacheObservable != null ? cacheObservable : Observable.<K>empty();
-    }
-
-    public void setCacheObservable(Observable<K> observable) {
-        this.cacheObservable = observable;
-    }
-
-    private Observable<? extends K> getApi() {
-        if (getApiObservable(getRestAdapter()) != null) {
-
-            if (saveCache != null) {
-                apiObservable = apiObservable.doOnNext(saveCache);
-                apiObservable = apiObservable.doOnError(new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        sendError(throwable);
-                    }
-                });
-            }
-
-            apiObservable = apiObservable.subscribeOn(Schedulers.io());
-            return apiObservable;
-        }
-
-        return Observable.empty();
+        return getApiObservable(getRestAdapter());
     }
 
     protected abstract Observable<K> getApiObservable(RestAdapter restAdapter);
-
-    public void setSaveCache(Action1<? super K> saveCache) {
-        this.saveCache = saveCache;
-    }
-
-    public void setApiObservable(Observable<K> apiObservable) {
-        this.apiObservable = apiObservable;
-    }
 
     protected Converter customConverter() {
         return null;
