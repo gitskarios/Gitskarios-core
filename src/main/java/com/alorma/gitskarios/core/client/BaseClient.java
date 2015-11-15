@@ -80,8 +80,8 @@ public abstract class BaseClient<K> implements RequestInterceptor, RestAdapter.L
         if (getApiObservable(getRestAdapter()) != null) {
 
             if (saveCache != null) {
-                apiObservable.doOnNext(saveCache);
-                apiObservable.doOnError(new Action1<Throwable>() {
+                apiObservable = apiObservable.doOnNext(saveCache);
+                apiObservable = apiObservable.doOnError(new Action1<Throwable>() {
                     @Override
                     public void call(Throwable throwable) {
                         sendError(throwable);
@@ -89,6 +89,7 @@ public abstract class BaseClient<K> implements RequestInterceptor, RestAdapter.L
                 });
             }
 
+            apiObservable = apiObservable.subscribeOn(Schedulers.io());
             return apiObservable;
         }
 
