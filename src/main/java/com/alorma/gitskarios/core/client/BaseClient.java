@@ -54,7 +54,7 @@ public abstract class BaseClient<K> implements RequestInterceptor, RestAdapter.L
       @Override
       public Boolean call(Integer integer, Throwable throwable) {
         if (throwable instanceof RetrofitError) {
-          return ((RetrofitError) throwable).getResponse().getStatus() == 202;
+          return ((RetrofitError) throwable).getResponse().getStatus() == 202 && integer < 3;
         }
         return integer < 3;
       }
