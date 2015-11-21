@@ -23,130 +23,127 @@ import rx.schedulers.Schedulers;
 
 public abstract class BaseListClient<K> implements RequestInterceptor, RestAdapter.Log {
 
-    protected StoreCredentials storeCredentials;
+  public Uri last;
+  public Uri next;
+  public int lastPage;
+  public int nextPage;
+  protected StoreCredentials storeCredentials;
+  protected Context context;
+  private ApiClient client;
 
-    protected Context context;
-    private ApiClient client;
+  public BaseListClient(Context context, ApiClient client) {
+    this.client = client;
+    if (context != null) {
+      this.context = context.getApplicationContext();
+    }
+    storeCredentials = new StoreCredentials(context);
+  }
 
-    public Uri last;
-    public Uri next;
-    public int lastPage;
-    public int nextPage;
+  protected RestAdapter getRestAdapter() {
+    RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder().setEndpoint(client.getApiEndpoint())
+        .setRequestInterceptor(this)
+        .setLogLevel(RestAdapter.LogLevel.FULL)
+        .setLog(this);
 
-    public BaseListClient(Context context, ApiClient client) {
-        this.client = client;
+    if (customConverter() != null) {
+      restAdapterBuilder.setConverter(customConverter());
+    }
+
+    if (getInterceptor() != null) {
+      restAdapterBuilder.setClient(getInterceptor());
+    }
+
+    return restAdapterBuilder.build();
+  }
+
+  @Nullable
+  protected Client getInterceptor() {
+    return null;
+  }
+
+  public Observable<? extends Pair<K, Integer>> observable() {
+    return getApiObservable().subscribeOn(Schedulers.io());
+  }
+
+  private Observable<? extends Pair<K, Integer>> getApiObservable() {
+    return Observable.create(getApiObservable(getRestAdapter()));
+  }
+
+  protected abstract ApiSubscriber getApiObservable(RestAdapter restAdapter);
+
+  protected Converter customConverter() {
+    return null;
+  }
+
+  protected String getToken() {
+    return storeCredentials.token();
+  }
+
+  public Context getContext() {
+    return context;
+  }
+
+  public ApiClient getClient() {
+    return client;
+  }
+
+  public void setStoreCredentials(StoreCredentials storeCredentials) {
+    this.storeCredentials = storeCredentials;
+  }
+
+  public abstract class ApiSubscriber implements Observable.OnSubscribe<Pair<K, Integer>>, Callback<K> {
+
+    Subscriber<? super Pair<K, Integer>> subscriber;
+
+    public ApiSubscriber() {
+    }
+
+    @Override
+    public void success(K k, Response r) {
+      subscriber.onNext(new Pair<>(k, getLinkData(r)));
+      subscriber.onCompleted();
+    }
+
+    @Override
+    public void failure(RetrofitError error) {
+      if (error.getResponse() != null && error.getResponse().getStatus() == 401) {
         if (context != null) {
-            this.context = context.getApplicationContext();
+          LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+          manager.sendBroadcast(new UnAuthIntent(storeCredentials.token()));
         }
-        storeCredentials = new StoreCredentials(context);
+      } else {
+        subscriber.onError(error);
+      }
     }
 
-    protected RestAdapter getRestAdapter() {
-        RestAdapter.Builder restAdapterBuilder =
-            new RestAdapter.Builder().setEndpoint(client.getApiEndpoint())
-                .setRequestInterceptor(this)
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setLog(this);
-
-        if (customConverter() != null) {
-            restAdapterBuilder.setConverter(customConverter());
-        }
-
-        if (getInterceptor() != null) {
-            restAdapterBuilder.setClient(getInterceptor());
+    private Integer getLinkData(Response r) {
+      if (r != null) {
+        List<Header> headers = r.getHeaders();
+        Map<String, String> headersMap = new HashMap<String, String>(headers.size());
+        for (Header header : headers) {
+          headersMap.put(header.getName(), header.getValue());
         }
 
-        return restAdapterBuilder.build();
-    }
+        String link = headersMap.get("Link");
 
-    @Nullable
-    protected Client getInterceptor() {
-        return null;
-    }
-
-    public Observable<? extends Pair<K, Integer>> observable() {
-        return getApiObservable().subscribeOn(Schedulers.io());
-    }
-
-    private Observable<? extends Pair<K, Integer>> getApiObservable() {
-        return Observable.create(getApiObservable(getRestAdapter()));
-    }
-
-    protected abstract ApiSubscriber getApiObservable(RestAdapter restAdapter);
-
-    public abstract class ApiSubscriber implements Observable.OnSubscribe<Pair<K, Integer>>, Callback<K>{
-
-        Subscriber<? super Pair<K, Integer>> subscriber;
-
-        public ApiSubscriber() {
+        if (link != null) {
+          String[] parts = link.split(",");
+          try {
+            return new PaginationLink(parts[0]).page;
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
         }
-
-        @Override
-        public void success(K k, Response r) {
-            subscriber.onNext(new Pair<>(k, getLinkData(r)));
-            subscriber.onCompleted();
-        }
-
-        @Override
-        public void failure(RetrofitError error) {
-            if (error.getResponse() != null && error.getResponse().getStatus() == 401) {
-                if (context != null) {
-                    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-                    manager.sendBroadcast(new UnAuthIntent(storeCredentials.token()));
-                }
-            } else {
-                subscriber.onError(error);
-            }
-        }
-
-        private Integer getLinkData(Response r) {
-            if (r != null) {
-                List<Header> headers = r.getHeaders();
-                Map<String, String> headersMap = new HashMap<String, String>(headers.size());
-                for (Header header : headers) {
-                    headersMap.put(header.getName(), header.getValue());
-                }
-
-                String link = headersMap.get("Link");
-
-                if (link != null) {
-                    String[] parts = link.split(",");
-                    try {
-                        return new PaginationLink(parts[0]).page;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public void call(Subscriber<? super Pair<K, Integer>> subscriber) {
-            this.subscriber = subscriber;
-            call(getRestAdapter());
-        }
-
-        protected abstract void call(RestAdapter restAdapter);
+      }
+      return null;
     }
 
-    protected Converter customConverter() {
-        return null;
+    @Override
+    public void call(Subscriber<? super Pair<K, Integer>> subscriber) {
+      this.subscriber = subscriber;
+      call(getRestAdapter());
     }
 
-    protected String getToken() {
-        return storeCredentials.token();
-    }
-
-    public Context getContext() {
-        return context;
-    }
-
-    public ApiClient getClient() {
-        return client;
-    }
-
-    public void setStoreCredentials(StoreCredentials storeCredentials) {
-        this.storeCredentials = storeCredentials;
-    }
+    protected abstract void call(RestAdapter restAdapter);
+  }
 }

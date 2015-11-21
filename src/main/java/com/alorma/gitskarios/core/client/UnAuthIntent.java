@@ -7,12 +7,11 @@ import android.content.Intent;
  */
 public class UnAuthIntent extends Intent {
 
-    public static final String ACTION = "com.alorma.UNAUTHORIZED";
-    public static final String TOKEN = "TOKEN";
+  public static final String ACTION = "com.alorma.UNAUTHORIZED";
+  public static final String TOKEN = "TOKEN";
 
-    public UnAuthIntent(String token) {
-        this.setAction(ACTION);
-        this.putExtra(TOKEN, token);
-    }
-
+  public UnAuthIntent(String token) {
+    this.setAction(ACTION);
+    this.putExtra(TOKEN, token);
+  }
 }

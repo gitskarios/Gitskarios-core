@@ -11,37 +11,36 @@ import android.util.Log;
  */
 public class MetaDeveloperCredentialsProvider implements DeveloperCredentialsProvider {
 
-    private String apiClient;
-    private String apiSecret;
-    private String apiOauth;
+  private String apiClient;
+  private String apiSecret;
+  private String apiOauth;
 
-    public MetaDeveloperCredentialsProvider(Context context) {
-        try {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            Bundle bundle = ai.metaData;
-            apiClient = bundle.getString("com.alorma.github.sdk.client");
-            apiSecret = bundle.getString("com.alorma.github.sdk.secret");
-            apiOauth = bundle.getString("com.alorma.github.sdk.oauth");
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e("GitHubSdk", "Failed to load meta-data, NameNotFound: " + e.getMessage());
-        } catch (NullPointerException e) {
-            Log.e("GitHubSdk", "Failed to load meta-data, NullPointer: " + e.getMessage());
-        }
+  public MetaDeveloperCredentialsProvider(Context context) {
+    try {
+      ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+      Bundle bundle = ai.metaData;
+      apiClient = bundle.getString("com.alorma.github.sdk.client");
+      apiSecret = bundle.getString("com.alorma.github.sdk.secret");
+      apiOauth = bundle.getString("com.alorma.github.sdk.oauth");
+    } catch (PackageManager.NameNotFoundException e) {
+      Log.e("GitHubSdk", "Failed to load meta-data, NameNotFound: " + e.getMessage());
+    } catch (NullPointerException e) {
+      Log.e("GitHubSdk", "Failed to load meta-data, NullPointer: " + e.getMessage());
     }
+  }
 
-    @Override
-    public String getApiClient() {
-        return apiClient;
-    }
+  @Override
+  public String getApiClient() {
+    return apiClient;
+  }
 
-    @Override
-    public String getAPiSecret() {
-        return apiSecret;
-    }
+  @Override
+  public String getAPiSecret() {
+    return apiSecret;
+  }
 
-    @Override
-    public String getApiOauth() {
-        return apiOauth;
-    }
-
+  @Override
+  public String getApiOauth() {
+    return apiOauth;
+  }
 }
