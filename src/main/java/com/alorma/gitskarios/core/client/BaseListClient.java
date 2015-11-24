@@ -129,7 +129,8 @@ public abstract class BaseListClient<K> implements RequestInterceptor, RestAdapt
         if (link != null) {
           String[] parts = link.split(",");
           try {
-            return new PaginationLink(parts[0]).page;
+            PaginationLink paginationLink = new PaginationLink(parts[0]);
+            return paginationLink.rel == RelType.next ? paginationLink.page : null;
           } catch (Exception e) {
             e.printStackTrace();
           }
