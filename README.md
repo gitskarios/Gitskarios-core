@@ -39,7 +39,7 @@ by this command `mvn clean intall` you will package this project into ~/.m2/repo
 
 
 ``` groovy
-    compile 'com.github.alorma:gitskarios-core:2.0.1'
+    compile 'com.github.alorma:gitskarios-core:2.1.0'
 ```
 
 for example you can use this lib by adding these two dependencies into your pom.xml
@@ -48,14 +48,14 @@ for example you can use this lib by adding these two dependencies into your pom.
 <dependency>
     <groupId>com.github.alorma</groupId>
     <artifactId>gitskarios-core</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <type>apklib</type>
     <scope>compile</scope>
 </dependency>
 <dependency>
     <groupId>com.github.alorma</groupId>
     <artifactId>gitskarios-core</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <type>jar</type>
     <scope>provided</scope>
 </dependency>
