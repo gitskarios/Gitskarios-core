@@ -8,9 +8,9 @@ buildscript {
   dependencies {
     classpath 'com.android.tools.build:gradle:2.0.0-alpha2'
     classpath 'io.fabric.tools:gradle:1.19.2'
+    classpath 'com.novoda:bintray-release:0.3.4'
   }
 }
-
 
 allprojects {
   repositories {
@@ -23,7 +23,7 @@ allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'bintray-release'
+apply plugin: 'com.novoda.bintray-release'
 
 /*
 buildscript {
