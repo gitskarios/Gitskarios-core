@@ -2,6 +2,8 @@
 
 [ ![Download](https://api.bintray.com/packages/alorma/maven/gitskarios-core/images/download.svg) ](https://bintray.com/alorma/maven/gitskarios-core/_latestVersion)
 
+# DEPRECATED
+=================
 
 # How to Use
 
